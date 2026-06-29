@@ -27,7 +27,7 @@ android {
     }
 
     signingConfigs {
-        getByName("release") {
+        create("release") {
             storeFile = file("release.keystore")
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "tosifa123"
             keyAlias = System.getenv("KEYSTORE_ALIAS") ?: "tosifa"
