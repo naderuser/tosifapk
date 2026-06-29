@@ -31,24 +31,16 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
         run: |
+          cd app
           keytool -genkeypair \
             -alias $KEYSTORE_ALIAS \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -keystore app/release.keystore \
+            -keystore release.keystore \
             -storepass $KEYSTORE_PASSWORD \
             -keypass $KEYSTORE_PASSWORD \
             -dname "CN=tosifa, OU=tosifa, O=tosifa, L=tehran, ST=tehran, C=IR"
-
-      - name: Create signing.properties
-        run: |
-          cat > app/signing.properties << EOF
-          storeFile=release.keystore
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEYSTORE_ALIAS }}
-          keyPassword=${{ secrets.KEYSTORE_PASSWORD }}
-          EOF
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
