@@ -690,7 +690,7 @@ const SHARED_CSS = `
   [data-theme="dark"] .link-box{background:#1e293b}
   .pill{font-size:12px;padding:2px 8px;border-radius:999px}
   .pill.ok{background:#dcfce7;color:#166534}.pill.no{background:#fee2e2;color:#991b1b}.pill.gr{background:#dbeafe;color:#1e40af}
-  .mark.correct{color:#166534;font-weight:700}.mark.wrong{color:#991b1b;font-weight:700}.mark.partial{color:#92400e;font-weight:700}
+  .mark.correct{color:#166534;font-weight:700}.mark.wrong{color:#991b1b;font-weight:700}.mark.partial{color:#92400e;font-weight:700}.mark.excellent{color:#166534;font-weight:700}.mark.good{color:#2563eb;font-weight:700}.mark.acceptable{color:#d97706;font-weight:700}.mark.needs-improve{color:#dc2626;font-weight:700}.mark.numeric{color:#7c3aed;font-weight:700;font-size:16px}
   a{color:var(--primary)}
   .rich{min-height:90px;border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;background:#fff;font-size:15px;line-height:1.9}
   [data-theme="dark"] .rich{background:#1e293b;border-color:#475569;color:#e2e8f0}
@@ -1037,20 +1037,46 @@ async function studentPage(env, id) {
         return;
       }
       const g=res.grading;
+      // بررسی نوع نمره‌دهی (عددی یا توصیفی)
+      const isNumeric = g.marks && Object.values(g.marks).some(v => !isNaN(parseFloat(v)));
+      
       let rows=res.questions.map((q,i)=>{
         const ans=res.answers[q.id];
         const mark=g.marks[q.id]||'';
         const fb=g.feedback[q.id]||'';
-        const mlabel={correct:'صحیح',wrong:'غلط',partial:'نیمه‌درست'}[mark]||'';
+        
+        // ستون نتیجه: نمره عددی یا وضعیت توصیفی
+        let resultCell;
+        if(isNumeric){
+          const score = parseFloat(mark);
+          const scoreText = isNaN(score) ? '—' : score.toString();
+          resultCell = '<span class="mark numeric">' + scoreText + ' از 20</span>';
+        } else {
+          const mlabel={excellent:'عالی',good:'خوب',acceptable:'قابل‌قبول','needs-improve':'نیاز به تلاش',correct:'صحیح',wrong:'غلط',partial:'نیمه‌درست'}[mark]||mark||'—';
+          const markClass = {excellent:'excellent',good:'good',acceptable:'acceptable','needs-improve':'needs-improve',correct:'correct',wrong:'wrong',partial:'partial'}[mark]||'';
+          resultCell = '<span class="mark '+markClass+'">'+mlabel+'</span>';
+        }
+        
         return '<tr><td>'+(i+1)+'</td><td>'+qHtml(q)+(q.image?'<br><img src="'+q.image+'" class="imgprev">':'')+'</td>'+
           '<td>'+(ansText(q,ans)||'<i>بدون پاسخ</i>')+'</td>'+
-          '<td><span class="mark '+mark+'">'+mlabel+'</span></td>'+
+          '<td>'+resultCell+'</td>'+
           '<td>'+esc(fb)+'</td></tr>';
       }).join('');
-      done.innerHTML='<h2>نتیجه آزمون</h2>'+
+      
+      // محاسبه نمره کل برای حالت عددی
+      let totalScore = '';
+      if(isNumeric){
+        const total = Object.values(g.marks).reduce((sum, m) => sum + (parseFloat(m) || 0), 0);
+        totalScore = '<div style="background:#dbeafe;padding:12px;border-radius:10px;margin-bottom:12px;font-size:18px"><b>📊 نمره کل: ' + total + ' از 20</b></div>';
+      }
+      
+      const statusHeader = isNumeric ? 'نمره' : 'وضعیت';
+      const feedbackHeader = isNumeric ? 'توضیحات' : 'بازخورد';
+      
+      done.innerHTML='<h2>نتیجه آزمون</h2>'+ totalScore +
         '<p class="muted">نام: '+esc(res.student.name)+' | نام درس: '+esc(res.student.courseName||'')+' | تاریخ: '+esc(res.student.examDate||'')+'</p>'+
-        '<table><tr><th>#</th><th>سوال</th><th>پاسخ شما</th><th>وضعیت</th><th>بازخورد معلم</th></tr>'+rows+'</table>'+
-        (g.overall?'<p style="margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px"><b>بازخورد کلی معلم:</b> '+esc(g.overall)+'</p>':'');
+        '<table><tr><th>#</th><th>سوال</th><th>پاسخ شما</th><th>'+statusHeader+'</th><th>'+feedbackHeader+'</th></tr>'+rows+'</table>'+
+        (g.overall?'<p style="margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px"><b>'+(isNumeric?'توضیحات کلی معلم':'بازخورد کلی معلم')+':</b> '+esc(g.overall)+'</p>':'');
     }
 
     function renderQuestions(){
