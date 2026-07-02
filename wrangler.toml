@@ -1,0 +1,23 @@
+# Cloudflare Pages Configuration
+# https://developers.cloudflare.com/pages/platform/build-configuration
+
+name = "exam-panel"
+compatibility_date = "2024-01-01"
+
+# For Cloudflare Pages (static site)
+[pages]
+build_output_dir = "."
+
+# Build command (if needed for future enhancements)
+# build_command = "npm run build"
+
+# Preview branch
+preview_branch = "preview"
+
+# Prevent CORS issues with static assets
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
