@@ -1,0 +1,18 @@
+# Cloudflare Worker Configuration
+name = "exam-panel-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# KV Namespace for storing exams
+[[kv_namespaces]]
+binding = "EXAM_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Environment variables (for local development)
+[vars]
+ENVIRONMENT = "development"
